@@ -1,7 +1,6 @@
 import torch
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
-from langchain_community.llms import HuggingFacePipeline
+from langchain_huggingface import ChatHuggingFace
+from langchain_huggingface.llms import HuggingFacePipeline
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           BitsAndBytesConfig, pipeline)
 
@@ -23,8 +22,8 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.float16,
 )
 
-# Create a pipeline
-text_pipeline = pipeline(
+# pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=10)
+pipeline = pipeline(
     "text-generation",
     model=model,
     tokenizer=tokenizer,
@@ -34,16 +33,6 @@ text_pipeline = pipeline(
     repetition_penalty=1.15,
     return_full_text=True,
 )
+hf = HuggingFacePipeline(pipeline=pipeline)
 
-# Create LangChain wrapper
-llm = HuggingFacePipeline(pipeline=text_pipeline)
-
-# Create conversation memory
-memory = ConversationBufferMemory()
-
-# Create conversation chain
-conversation = ConversationChain(
-    llm=llm,
-    memory=memory,
-    verbose=True
-)
+chat_model = ChatHuggingFace(llm=hf, verbose=True)
