@@ -13,8 +13,14 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer,
 
 import llm
 
+# agent docs: https://python.langchain.com/docs/tutorials/agents/#create-the-agent
+
 # login() # You will be prompted for your HF key, which will then be saved locally
 chat_model = llm.chat_model
+
+# Invoke the chat model
+res = chat_model.invoke([HumanMessage(content="hi!")])
+print(res.content)
 
 # Create the agent
 memory = MemorySaver()
@@ -49,3 +55,12 @@ for chunk in agent_executor.stream(
 ):
     print(chunk)
     print("----")
+
+for chunk in agent_executor.stream(
+    {"messages": [HumanMessage(content="Take 3 to the fifth power and multiply that by the sum of twelve and three, then square the whole result")]}, config
+):
+    print(chunk)
+    print("----")
+
+response = agent_executor.invoke({"messages": [HumanMessage(content="hi!")]})
+response["messages"]
