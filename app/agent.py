@@ -1,56 +1,89 @@
-from datetime import datetime
+# Import relevant functionality
+import torch
+from huggingface_hub import login
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_core.messages import HumanMessage
+from langchain_core.tools import tool
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from langchain_huggingface.llms import HuggingFacePipeline
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.prebuilt import create_react_agent
+from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                          BitsAndBytesConfig, pipeline)
 
-from langchain.agents import AgentType, Tool, initialize_agent
-from langchain_community.tools import DuckDuckGoSearchRun
+# import llm
 
-import llm
-from llm import memory
+# login() # You will be prompted for your HF key, which will then be saved locally
 
-# Initialize tools
-search = DuckDuckGoSearchRun()
-
-tools = [
-    Tool(
-        name="Search",
-        func=search.run,
-        description="useful for when you need to answer questions about current events or general knowledge"
-    ),
-    Tool(
-        name="Current Time",
-        func=lambda _: datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        description="Useful for when you need to know the current time and date"
-    )
-]
-
-# Initialize the agent
-agent = initialize_agent(
-    tools,
-    llm,
-    agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
-    verbose=True,
-    memory=memory,
-    handle_parsing_errors=True
+# Configure model loading with 4-bit quantization
+quantization_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_use_double_quant=True,
 )
 
-# Example conversation function
-def chat_with_agent(user_input: str) -> str:
-    try:
-        response = agent.run(input=user_input)
-        return response
-    except Exception as e:
-        return f"An error occurred: {str(e)}"
+# Initialize tokenizer and model
+model_name = "mistralai/Mistral-7B-Instruct-v0.1"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    device_map="auto",
+    quantization_config=quantization_config,
+    torch_dtype=torch.float16,
+)
 
-# Example usage
-if __name__ == "__main__":
-    # Example conversation
-    queries = [
-        "What's the current time?",
-        "Can you tell me about the weather in London?",
-        "Remember that I like coffee in the morning.",
-        "What did I tell you about my morning preferences?"
-    ]
+# pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=10)
+pipeline = pipeline(
+    "text-generation",
+    model=model,
+    tokenizer=tokenizer,
+    max_length=2048,
+    temperature=0.7,
+    top_p=0.95,
+    repetition_penalty=1.15,
+    return_full_text=True,
+)
+hf = HuggingFacePipeline(pipeline=pipeline)
 
-    for query in queries:
-        print(f"\nUser: {query}")
-        response = chat_with_agent(query)
-        print(f"Agent: {response}")
+chat_model = ChatHuggingFace(llm=hf, verbose=True)
+
+
+# messages = [
+#     ("system", "You are a helpful translator. Translate the user sentence to Swedish."),
+#     ("human", "I love programming."),
+# ]
+
+# Create the agent
+memory = MemorySaver()
+
+@tool
+def multiply(first_int: int, second_int: int) -> int:
+    """Multiply two integers together."""
+    return first_int * second_int
+
+
+@tool
+def add(first_int: int, second_int: int) -> int:
+    "Add two integers."
+    return first_int + second_int
+
+
+@tool
+def exponentiate(base: int, exponent: int) -> int:
+    "Exponentiate the base to the exponent power."
+    return base**exponent
+
+
+# Tool api reference https://api.python.langchain.com/en/latest/tools/langchain_core.tools.tool.html
+tools = [multiply, add, exponentiate]
+
+agent_executor = create_react_agent(chat_model, tools, checkpointer=memory)
+
+# Use the agent
+config = {"configurable": {"thread_id": "abc123"}}
+for chunk in agent_executor.stream(
+    {"messages": [HumanMessage(content="hi im bob! and i live in sf")]}, config
+):
+    print(chunk)
+    print("----")
