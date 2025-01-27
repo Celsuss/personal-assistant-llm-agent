@@ -20,7 +20,8 @@ class Llm:
         )
 
         # Initialize tokenizer and model
-        model_name = "mistralai/Mistral-7B-Instruct-v0.1"
+        model_name = settings.hf_model_path
+        # model_name = "mistralai/Mistral-7B-Instruct-v0.1"
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -38,6 +39,8 @@ class Llm:
             top_p=0.95,
             repetition_penalty=1.15,
             return_full_text=True,
+            truncation=True,
+            do_sample=True,
             # max_new_tokens=10,
         )
         hf = HuggingFacePipeline(pipeline=pipe)

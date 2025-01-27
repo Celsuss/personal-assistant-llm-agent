@@ -53,10 +53,10 @@ class LlmAgent:
         """Invoke a new conversation with llm agent."""
         self.config["configurable"]["thread_id"] + "bca321" # Add a random function here
 
-    def stream_agent(self):
+    def stream_agent(self, humanMessage: str):
         """Stream llm agent."""
         for chunk in self.agent_executor.stream(
-                {"messages": [HumanMessage(content="hi im bob! and i live in sf")]},
+                {"messages": [HumanMessage(content=humanMessage)]},
                 self.config
         ):
             print(chunk)

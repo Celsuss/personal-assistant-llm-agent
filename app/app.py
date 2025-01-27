@@ -12,12 +12,13 @@ from config.config import settings
 # login() # You will be prompted for your HF key, which will then be saved locally
 
 def create_app() -> FastAPI:
-    # settings = Settings()
-    print(settings.hf_model_path)
+    print(f"Model used is {settings.hf_model_path}")
     app = FastAPI(title="LLM Agent API")
 
     # Initialize LLM Agent
     agent = LlmAgent(settings)
+    agent.stream_agent("Hello, I'm Jens a MLOps engineer. I'm creating you to \
+    learn more about llm agents. I hope we will work well together")
 
     # Add routes
     # app.include_router(router)
