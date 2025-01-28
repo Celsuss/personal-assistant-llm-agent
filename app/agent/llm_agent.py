@@ -1,6 +1,10 @@
 # Import relevant functionality
 # import torch
-# from langchain_community.tools.tavily_search import TavilySearchResults
+import os
+from uuid import uuid4
+
+from config.config import settings
+from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 # from langchain_huggingface import ChatHuggingFace
@@ -14,6 +18,9 @@ from agent.llm import Llm
 #                           BitsAndBytesConfig, pipeline)
 
 
+# TODO Remove later
+os.environ["TAVILY_API_KEY"] = settings.tavily_api_key
+
 class LlmAgent:
     """
     LLMAgent class.
@@ -22,19 +29,20 @@ class LlmAgent:
     https://python.langchain.com/docs/tutorials/agents/#create-the-agent
     """
 
-    def __init__(self, settings):
+    def __init__(self):
         """Init function for LLMAgent."""
-        self.settings = settings
         # Memory api reference https://langchain-ai.github.io/langgraph/reference/checkpoints/#langgraph.checkpoint.memory.MemorySaver
         self.memory = MemorySaver()
         # Tool api reference https://api.python.langchain.com/en/latest/tools/langchain_core.tools.tool.html
-        self.tools = [multiply, add, exponentiate]
+        search_tool = TavilySearchResults(max_results=2)
+        self.tools = [search_tool]
         self.llm = Llm()
         self.chat_model = self.llm.chat_model
+        # Creates a graph that works with a chat model that utilizes tool calling.
         self.agent_executor = create_react_agent(self.chat_model,
                                                  self.tools,
                                                  checkpointer=self.memory)
-        self.config = {"configurable": {"thread_id": "abc123"}}
+        self.config = {"configurable": {"thread_id": f"thread_{str(uuid4())}"}}
 
     def invoke(self):
         """Invoke the llm agent."""
@@ -49,9 +57,9 @@ class LlmAgent:
         res = self.chat_model.invoke([HumanMessage(content="hi!")])
         print(res.content)
 
-    def start_conversation(self):
+    def start_new_conversation(self):
         """Invoke a new conversation with llm agent."""
-        self.config["configurable"]["thread_id"] + "bca321" # Add a random function here
+        self.config["configurable"]["thread_id"] = f"thread_{str(uuid4())}"
 
     def stream_agent(self, humanMessage: str):
         """Stream llm agent."""

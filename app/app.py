@@ -8,22 +8,23 @@ from config.config import settings
 
 # from app.api.routes import router
 
-
 # login() # You will be prompted for your HF key, which will then be saved locally
 
 def create_app() -> FastAPI:
-    print(f"Model used is {settings.hf_model_path}")
+    """Create the app to run."""
+    print(f"Model used is {settings.ollama_model}")
     app = FastAPI(title="LLM Agent API")
 
     # Initialize LLM Agent
-    agent = LlmAgent(settings)
-    agent.stream_agent("Hello, I'm Jens a MLOps engineer. I'm creating you to \
-    learn more about llm agents. I hope we will work well together")
+    agent = LlmAgent()
+
+    agent.stream_agent("What is the weather in Stockholm today?")
 
     # Add routes
     # app.include_router(router)
 
     return app
+
 
 app = create_app()
 

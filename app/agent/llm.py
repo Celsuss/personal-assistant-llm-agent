@@ -1,7 +1,8 @@
 import torch
 from config.config import settings
 from langchain_huggingface import ChatHuggingFace
-from langchain_huggingface.llms import HuggingFacePipeline
+from langchain_huggingface.llms import HuggingFaceEndpoint, HuggingFacePipeline
+from langchain_ollama import ChatOllama
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           BitsAndBytesConfig, pipeline)
 
@@ -11,6 +12,21 @@ class Llm:
 
     def __init__(self):
         """Init function for LLM class."""
+        # self.loadHuggingFacePipeline()
+        self.loadOllama()
+
+    def loadOllama(self):
+        """Load Ollama model."""
+        self.chat_model = ChatOllama(
+            model=settings.ollama_model,
+            temperature=0.6,
+            num_predict=256,
+            # other params ...
+        )
+
+
+    def loadHuggingFacePipeline(self):
+        """Load huggingFacePipeline chat model."""
         # Configure model loading with 4-bit quantization
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -35,7 +51,7 @@ class Llm:
             model=model,
             tokenizer=tokenizer,
             max_length=2048,
-            temperature=0.7,
+            temperature=0.6,
             top_p=0.95,
             repetition_penalty=1.15,
             return_full_text=True,
