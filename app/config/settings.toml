@@ -4,3 +4,5 @@ hf_model_path = "mistralai/Mistral-7B-v0.3"
 
 # ollama_model = "deepseek-r1:7b"
 ollama_model = "mistral:7b"
+
+posetgres_uri = ""

@@ -1,0 +1,57 @@
+---
+services:
+  postgres:
+    container_name: llm_agent_postgres
+    build:
+      context: ./postgres/
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_DB: llm_agent_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secure_password  # Change this in production
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Mount initialization scripts
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d llm_agent_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    container_name: llm_agent_app
+    build:
+      context: ./app/
+      dockerfile: Dockerfile
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./app/:/app
+    networks:
+      - llm_network
+    depends_on:
+      - ollama
+
+  ollama:
+    container_name: llm_agent_ollama
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - llm_network
+
+
+volumes:
+  postgres_data:
+  ollama_data:
+
+networks:
+  llm_network:
+    driver: bridge

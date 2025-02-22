@@ -11,6 +11,7 @@ from langchain_core.tools import tool
 # from langchain_huggingface.llms import HuggingFacePipeline
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
+from langgraph.store.memory import InMemoryStore
 
 from agent.llm import Llm
 
@@ -33,6 +34,7 @@ class LlmAgent:
         """Init function for LLMAgent."""
         # Memory api reference https://langchain-ai.github.io/langgraph/reference/checkpoints/#langgraph.checkpoint.memory.MemorySaver
         self.memory = MemorySaver()
+        memory = InMemoryStore()
         # Tool api reference https://api.python.langchain.com/en/latest/tools/langchain_core.tools.tool.html
         search_tool = TavilySearchResults(max_results=2)
         self.tools = [search_tool]
@@ -44,13 +46,14 @@ class LlmAgent:
                                                  checkpointer=self.memory)
         self.config = {"configurable": {"thread_id": f"thread_{str(uuid4())}"}}
 
-    def invoke(self):
+    def invoke(self, msg: str):
         """Invoke the llm agent."""
         response = self.agent_executor.invoke(
-            {"messages": [HumanMessage(content="hi!")]},
+            {"messages": [HumanMessage(content=msg)]},
             self.config
         )
         print(response["messages"])
+        return response["messages"]
 
     def invoke_llm(self):
         """Invoke the llm model."""
