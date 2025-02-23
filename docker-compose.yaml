@@ -37,16 +37,26 @@ services:
     depends_on:
       - ollama
 
+  model-init:
+    build:
+      context: ./ollama/
+      dockerfile: Dockerfile.init
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    networks:
+      - llm_network
+
   ollama:
-    container_name: llm_agent_ollama
     image: ollama/ollama:latest
+    container_name: ollama
     volumes:
       - ollama_data:/root/.ollama
     ports:
       - "11434:11434"
     networks:
       - llm_network
-
 
 volumes:
   postgres_data:

@@ -23,11 +23,12 @@ class Llm:
         Api docs:
         https://python.langchain.com/api_reference/ollama/chat_models/langchain_ollama.chat_models.ChatOllama.html#langchain_ollama.chat_models.ChatOllama
         """
+
         self.chat_model = ChatOllama(
             model=settings.ollama_model,
             temperature=0.6,
             num_predict=256,
-            base_url=os.environ["OLLAMA_HOST", 'http://localhost:11434']
+            base_url=os.environ.get("OLLAMA_HOST", "http://localhost:11434")
             # other params ...
         )
 
