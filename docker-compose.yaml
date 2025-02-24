@@ -57,6 +57,14 @@ services:
       - "11434:11434"
     networks:
       - llm_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
 
 volumes:
   postgres_data:

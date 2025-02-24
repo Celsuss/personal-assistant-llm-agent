@@ -1,5 +1,6 @@
 # Import relevant functionality
 # import torch
+import logging
 import os
 from uuid import uuid4
 
@@ -21,6 +22,7 @@ from agent.llm import Llm
 
 # TODO Remove later
 os.environ["TAVILY_API_KEY"] = settings.tavily_api_key
+logger = logging.getLogger(__name__)
 
 class LlmAgent:
     """
@@ -36,8 +38,9 @@ class LlmAgent:
         self.memory = MemorySaver()
         memory = InMemoryStore()
         # Tool api reference https://api.python.langchain.com/en/latest/tools/langchain_core.tools.tool.html
-        search_tool = TavilySearchResults(max_results=2)
-        self.tools = [search_tool]
+        # search_tool = TavilySearchResults(max_results=2)
+        # self.tools = [search_tool]
+        self.tools = []
         self.llm = Llm()
         self.chat_model = self.llm.chat_model
         # Creates a graph that works with a chat model that utilizes tool calling.
@@ -46,14 +49,15 @@ class LlmAgent:
                                                  checkpointer=self.memory)
         self.config = {"configurable": {"thread_id": f"thread_{str(uuid4())}"}}
 
-    def invoke(self, msg: str):
+    def invoke(self, msg):
         """Invoke the llm agent."""
         response = self.agent_executor.invoke(
-            {"messages": [HumanMessage(content=msg)]},
+            {"messages": msg},
             self.config
         )
         print(response["messages"])
-        return response["messages"]
+        logger.info(f"Response from agent: {response}")
+        return response
 
     def invoke_llm(self):
         """Invoke the llm model."""
