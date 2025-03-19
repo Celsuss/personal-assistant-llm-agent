@@ -2,6 +2,7 @@
 # import torch
 import logging
 import os
+from typing import Generator, List, Tuple
 from uuid import uuid4
 
 from config.config import settings
@@ -37,7 +38,7 @@ class LlmAgent:
         # Memory api reference https://langchain-ai.github.io/langgraph/reference/checkpoints/#langgraph.checkpoint.memory.MemorySaver
         self.memory = MemorySaver()
         memory = InMemoryStore()
-        # Tool api reference https://api.python.langchain.com/en/latest/tools/langchain_core.tools.tool.html
+        # Tool api reference https://api.python.langchain.com/en/latest/tools/langchain_core.tools.tool.HTML
         # search_tool = TavilySearchResults(max_results=2)
         # self.tools = [search_tool]
         self.tools = []
@@ -49,10 +50,12 @@ class LlmAgent:
                                                  checkpointer=self.memory)
         self.config = {"configurable": {"thread_id": f"thread_{str(uuid4())}"}}
 
-    def invoke(self, msg):
+
+        # TODO Fix return type
+    def invoke(self, messages: dict):
         """Invoke the llm agent."""
         response = self.agent_executor.invoke(
-            {"messages": msg},
+            {"messages": messages},
             self.config
         )
         print(response["messages"])
@@ -68,14 +71,14 @@ class LlmAgent:
         """Invoke a new conversation with llm agent."""
         self.config["configurable"]["thread_id"] = f"thread_{str(uuid4())}"
 
-    def stream_agent(self, humanMessage: str):
+        # TODO Fix return type
+    def invoke_stream(self, messages: dict) -> Generator[str, None, None]:
         """Stream llm agent."""
         for chunk in self.agent_executor.stream(
-                {"messages": [HumanMessage(content=humanMessage)]},
+                messages,
                 self.config
         ):
-            print(chunk)
-            print("----")
+            yield chunk
 
 
 @tool
