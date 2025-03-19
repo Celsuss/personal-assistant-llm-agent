@@ -1,13 +1,16 @@
 import os
+import logging
 
 import torch
 from config.config import settings
 from langchain_huggingface import ChatHuggingFace
 from langchain_huggingface.llms import HuggingFaceEndpoint, HuggingFacePipeline
 from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           BitsAndBytesConfig, pipeline)
 
+logger = logging.getLogger(__name__)
 
 class Llm:
     """Huggingface LLM model class."""
@@ -15,7 +18,10 @@ class Llm:
     def __init__(self):
         """Init function for LLM class."""
         # self.loadHuggingFacePipeline()
-        self.loadOllama()
+        if settings.use_local_model is True:
+            self.loadOllama()
+        else:
+            self.loadOpenAI()
 
     def loadOllama(self):
         """Load Ollama model.
@@ -24,6 +30,7 @@ class Llm:
         https://python.langchain.com/api_reference/ollama/chat_models/langchain_ollama.chat_models.ChatOllama.html#langchain_ollama.chat_models.ChatOllama
         """
 
+        logger.info(f'Loading ollama model {settings.ollama_model}')
         self.chat_model = ChatOllama(
             model=settings.ollama_model,
             temperature=0.6,
@@ -32,6 +39,20 @@ class Llm:
             # other params ...
         )
 
+    def loadOpenAI(self):
+        """Load chat model for openAI.
+
+        Docs: https://python.langchain.com/docs/integrations/chat/openai/"""
+
+        logger.info(f'Loading openAI model {settings.openai_model}')
+        self.chat_model = ChatOpenAI(
+            model=settings.openai_model,
+            temperature=0,
+            max_tokens=None,
+            timeout=None,
+            max_retries=2,
+            api_key=settings.openai_api_key,
+        )
 
     def loadHuggingFacePipeline(self):
         """Load huggingFacePipeline chat model.

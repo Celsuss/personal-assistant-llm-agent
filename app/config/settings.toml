@@ -6,3 +6,10 @@ hf_model_path = "mistralai/Mistral-7B-v0.3"
 ollama_model = "mistral:7b"
 
 posetgres_uri = ""
+
+use_local_model = true
+# openai_model = "gpt-4o"
+openai_model = "GPT-4o mini"
+
+log_level = "DEBUG"
+# log_level = "info"

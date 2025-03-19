@@ -15,7 +15,7 @@ from config.config import settings
 
 # login() # You will be prompted for your HF key, which will then be saved locally
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
 
 agent = LlmAgent()

@@ -3,9 +3,10 @@ fastapi==0.115.8
 gradio==5.17.1
 huggingface_hub==0.29.1
 langchain_community==0.3.18
-langchain_core==0.3.37
+langchain_core==0.3.44
 langchain_huggingface==0.1.2
 langchain_ollama==0.2.3
+langchain-openai==0.3.8
 langgraph==0.2.74
 torch==2.5.1
 transformers==4.48.1
