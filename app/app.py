@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 agent = LlmAgent()
 
 
-def respond(message: str, history: List[Tuple[str, str]]) -> Generator[str, None, None]:
+def respond(message: Tuple[str, str], history: List[Tuple[str, str]]) -> Generator[str, None, None]:
+# def respond(message: Tuple[str, str], history: List[Tuple[str, str]]):
     history_langchain_format = []
     for msg in history:
         if msg['role'] == "user":
@@ -32,14 +33,12 @@ def respond(message: str, history: List[Tuple[str, str]]) -> Generator[str, None
             history_langchain_format.append(
                 AIMessage(content=msg['content'])
             )
-    history_langchain_format.append(HumanMessage(content=message))
+    history_langchain_format.append(HumanMessage(content=message['content']))
 
-    # response = agent.invoke(history_langchain_format)
 
-    # return response["messages"][-1].content if response["messages"] \
-    #     else "No response"
-    for chunk in agent.invoke_stream(history_langchain_format):
-        yield chunk
+    # for chunk in agent.invoke_stream(history_langchain_format):
+    #     yield chunk
+    yield from agent.invoke_stream(history_langchain_format)
 
 
 js_func = """
@@ -63,11 +62,13 @@ with gr.Blocks(js=js_func) as demo:
         return "", history + [{"role": "user", "content": user_message}]
 
     def bot(history):
-        user_message = history[-1]
-        bot_message = respond(user_message, history[:-1])
         history.append({"role": "assistant", "content": ""})
-        for character in bot_message:
-            history[-1]['content'] += character
+        user_message = history[-1]
+
+        current_content = ''
+        for character in respond(user_message, history[:-1]):
+            current_content += character['agent']['messages'][-1].text()
+            history[-1] = {"role": "assistant", "content": current_content}
             yield history
 
     msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(

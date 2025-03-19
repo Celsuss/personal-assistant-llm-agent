@@ -72,13 +72,18 @@ class LlmAgent:
         self.config["configurable"]["thread_id"] = f"thread_{str(uuid4())}"
 
         # TODO Fix return type
-    def invoke_stream(self, messages: dict) -> Generator[str, None, None]:
+    def invoke_stream(self, messages: List) -> Generator[str, None, None]:
         """Stream llm agent."""
-        for chunk in self.agent_executor.stream(
-                messages,
-                self.config
-        ):
-            yield chunk
+        yield from self.agent_executor.stream(
+            {'messages': messages},
+            self.config
+        )
+
+        # for chunk in self.agent_executor.stream(
+        #         {'messages': messages},
+        #         self.config
+        # ):
+        #     yield chunk
 
 
 @tool
